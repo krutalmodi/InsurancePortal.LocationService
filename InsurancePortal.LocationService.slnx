@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="InsurancePortal.LocationService.API/InsurancePortal.LocationService.API.csproj" />
+  <Project Path="InsurancePortal.LocationService.Application/InsurancePortal.LocationService.Application.csproj" />
+  <Project Path="InsurancePortal.LocationService.Domain/InsurancePortal.LocationService.Domain.csproj" />
+  <Project Path="InsurancePortal.LocationService.Infrastructure/InsurancePortal.LocationService.Infrastructure.csproj" />
+</Solution>
