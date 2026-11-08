@@ -13,6 +13,8 @@ namespace InsurancePortal.LocationService.Application.Repositories
 
         Task<Location?> GetByIdAsync(Guid id);
 
+        Task<Location?> GetByLocationAsync(Location location);
+
         Task<IEnumerable<Location>> GetAllAsync();
 
         Task DeleteAsync(Guid id);

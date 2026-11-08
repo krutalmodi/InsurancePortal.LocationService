@@ -47,8 +47,29 @@ namespace InsurancePortal.LocationService.Infrastructure.Data.Configurations.Loo
 
             var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             builder.HasData(
-                new { Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"), Code = "USA", Name = "United States", Description = (string?)null, IsActive = true, SortOrder = 1, CreatedAt = seedDate, UpdatedAt = seedDate, IsoCode = "US" },
-                new { Id = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"), Code = "Canada", Name = "Canada", Description = (string?)null, IsActive = true, SortOrder = 2, CreatedAt = seedDate, UpdatedAt = seedDate, IsoCode = "CA" });
+                new
+                {
+                    Id = 1,
+                    Code = CountryLookup.USA,
+                    Name = "United States",
+                    IsoCode = "US",
+                    IsActive = true,
+                    SortOrder = 1,
+                    CreatedAt = seedDate,
+                    UpdatedAt = seedDate
+                },
+                new
+                {
+                    Id = 2,
+                    Code = CountryLookup.Canada,
+                    Name = "Canada",
+                    IsoCode = "CA",
+                    IsActive = true,
+                    SortOrder = 2,
+                    CreatedAt = seedDate,
+                    UpdatedAt = seedDate
+                }
+            );
         }
     }
 }

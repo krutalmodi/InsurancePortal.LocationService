@@ -10,7 +10,7 @@ namespace InsurancePortal.LocationService.Domain.Entities.Lookups
         /// Foreign key to CountryLookup
         /// Ensures province belongs to correct country
         /// </summary>
-        public Guid CountryId { get; set; }
+        public int CountryId { get; set; }
 
         /// <summary>
         /// Standardized province/state code (e.g., "CA", "ON", "BC")

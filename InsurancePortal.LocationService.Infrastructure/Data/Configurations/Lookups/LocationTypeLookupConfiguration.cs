@@ -37,8 +37,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Data.Configurations.Loo
 
             var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
             builder.HasData(
-                new { Id = Guid.Parse("55555555-5555-5555-5555-555555555501"), Code = "Residential", Name = "Residential", Description = (string?)null, IsActive = true, SortOrder = 1, CreatedAt = seedDate, UpdatedAt = seedDate },
-                new { Id = Guid.Parse("55555555-5555-5555-5555-555555555502"), Code = "Commercial", Name = "Commercial", Description = (string?)null, IsActive = true, SortOrder = 2, CreatedAt = seedDate, UpdatedAt = seedDate });
+                new { Id = 1, Code = "Residential", Name = "Residential", CreatedAt = seedDate, UpdatedAt = seedDate },
+                new { Id = 2, Code = "Commercial", Name = "Commercial", CreatedAt = seedDate, UpdatedAt = seedDate }
+            );
         }
     }
 }

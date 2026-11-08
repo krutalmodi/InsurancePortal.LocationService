@@ -7,7 +7,7 @@ namespace InsurancePortal.LocationService.Application.DTOs.Responses
     {
         public Guid Id { get; set; }
 
-        public Guid LocationTypeId { get; set; }
+        public int LocationTypeId { get; set; }
 
         public string? UnitNumber { get; set; }
 
@@ -19,8 +19,8 @@ namespace InsurancePortal.LocationService.Application.DTOs.Responses
 
         public string PostalCode { get; set; } = string.Empty;
 
-        public Guid ProvinceId { get; set; }
+        public int ProvinceId { get; set; }
 
-        public Guid CountryId { get; set; }
+        public int CountryId { get; set; }
     }
 }

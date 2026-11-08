@@ -51,23 +51,23 @@ namespace InsurancePortal.LocationService.Infrastructure.Data.Configurations.Loo
                 .OnDelete(DeleteBehavior.Restrict);
 
             var seedDate = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc);
-            var usa = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01");
-            var canada = Guid.Parse("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02");
+            const int usa = 1;
+            const int canada = 2;
             builder.HasData(
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff01", usa, "CA", "California", 1, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff02", usa, "TX", "Texas", 2, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff03", usa, "NY", "New York", 3, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff04", usa, "FL", "Florida", 4, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff05", canada, "ON", "Ontario", 5, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff06", canada, "QC", "Quebec", 6, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff07", canada, "BC", "British Columbia", 7, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff08", canada, "AB", "Alberta", 8, seedDate),
-                Province("ffffffff-ffff-ffff-ffff-ffffffffff09", canada, "MB", "Manitoba", 9, seedDate));
+                Province(1, usa, "CA", "California", 1, seedDate),
+                Province(2, usa, "TX", "Texas", 2, seedDate),
+                Province(3, usa, "NY", "New York", 3, seedDate),
+                Province(4, usa, "FL", "Florida", 4, seedDate),
+                Province(5, canada, "ON", "Ontario", 5, seedDate),
+                Province(6, canada, "QC", "Quebec", 6, seedDate),
+                Province(7, canada, "BC", "British Columbia", 7, seedDate),
+                Province(8, canada, "AB", "Alberta", 8, seedDate),
+                Province(9, canada, "MB", "Manitoba", 9, seedDate));
         }
 
-        private static object Province(string id, Guid countryId, string code, string name, int sortOrder, DateTime seedDate) => new
+        private static object Province(int id, int countryId, string code, string name, int sortOrder, DateTime seedDate) => new
         {
-            Id = Guid.Parse(id),
+            Id = id,
             CountryId = countryId,
             Code = code,
             ProvinceCode = code,

@@ -33,8 +33,8 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
-                    b.Property<Guid>("CountryId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .ValueGeneratedOnAdd()
@@ -45,16 +45,16 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
 
-                    b.Property<Guid>("LocationTypeId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("LocationTypeId")
+                        .HasColumnType("int");
 
                     b.Property<string>("PostalCode")
                         .IsRequired()
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<Guid>("ProvinceId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("ProvinceId")
+                        .HasColumnType("int");
 
                     b.Property<string>("StreetAddress1")
                         .IsRequired()
@@ -93,9 +93,11 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
 
             modelBuilder.Entity("InsurancePortal.LocationService.Domain.Entities.Lookups.CountryLookup", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -151,7 +153,7 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
+                            Id = 1,
                             Code = "USA",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -162,7 +164,7 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            Id = 2,
                             Code = "Canada",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
@@ -175,9 +177,11 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
 
             modelBuilder.Entity("InsurancePortal.LocationService.Domain.Entities.Lookups.LocationTypeLookup", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
@@ -225,39 +229,37 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555501"),
+                            Id = 1,
                             Code = "Residential",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
                             Name = "Residential",
-                            SortOrder = 1,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         },
                         new
                         {
-                            Id = new Guid("55555555-5555-5555-5555-555555555502"),
+                            Id = 2,
                             Code = "Commercial",
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
-                            IsActive = true,
                             Name = "Commercial",
-                            SortOrder = 2,
                             UpdatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc)
                         });
                 });
 
             modelBuilder.Entity("InsurancePortal.LocationService.Domain.Entities.Lookups.ProvinceLookup", b =>
                 {
-                    b.Property<Guid>("Id")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Code")
                         .IsRequired()
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
-                    b.Property<Guid>("CountryId")
-                        .HasColumnType("uniqueidentifier");
+                    b.Property<int>("CountryId")
+                        .HasColumnType("int");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -308,9 +310,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                     b.HasData(
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff01"),
+                            Id = 1,
                             Code = "CA",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
+                            CountryId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "California",
@@ -320,9 +322,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff02"),
+                            Id = 2,
                             Code = "TX",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
+                            CountryId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Texas",
@@ -332,9 +334,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff03"),
+                            Id = 3,
                             Code = "NY",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
+                            CountryId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "New York",
@@ -344,9 +346,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff04"),
+                            Id = 4,
                             Code = "FL",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee01"),
+                            CountryId = 1,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Florida",
@@ -356,9 +358,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff05"),
+                            Id = 5,
                             Code = "ON",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            CountryId = 2,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Ontario",
@@ -368,9 +370,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff06"),
+                            Id = 6,
                             Code = "QC",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            CountryId = 2,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Quebec",
@@ -380,9 +382,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff07"),
+                            Id = 7,
                             Code = "BC",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            CountryId = 2,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "British Columbia",
@@ -392,9 +394,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff08"),
+                            Id = 8,
                             Code = "AB",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            CountryId = 2,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Alberta",
@@ -404,9 +406,9 @@ namespace InsurancePortal.LocationService.Infrastructure.Migrations
                         },
                         new
                         {
-                            Id = new Guid("ffffffff-ffff-ffff-ffff-ffffffffff09"),
+                            Id = 9,
                             Code = "MB",
-                            CountryId = new Guid("eeeeeeee-eeee-eeee-eeee-eeeeeeeeee02"),
+                            CountryId = 2,
                             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, 0, DateTimeKind.Utc),
                             IsActive = true,
                             Name = "Manitoba",

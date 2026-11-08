@@ -8,7 +8,7 @@ namespace InsurancePortal.LocationService.Application.DTOs.Requests
         /// <summary>
         /// Type of location (Residential, Commercial, etc.) - FK to LocationTypeLookup
         /// </summary>
-        public Guid LocationTypeId { get; set; }
+        public int LocationTypeId { get; set; }
 
         /// <summary>
         /// Unit/Suite number (optional)
@@ -38,11 +38,11 @@ namespace InsurancePortal.LocationService.Application.DTOs.Requests
         /// <summary>
         /// FK to ProvinceLookup
         /// </summary>
-        public Guid ProvinceId { get; set; }
+        public int ProvinceId { get; set; }
 
         /// <summary>
         /// FK to CountryLookup
         /// </summary>
-        public Guid CountryId { get; set; }
+        public int CountryId { get; set; }
     }
 }

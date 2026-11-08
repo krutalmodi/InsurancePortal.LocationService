@@ -54,6 +54,22 @@ namespace InsurancePortal.LocationService.Infrastructure.Repositories
         }
 
         /// <summary>
+        /// Get location matching the given address fields
+        /// </summary>
+        public async Task<Location?> GetByLocationAsync(Location location)
+        {
+            return await _context.Locations.AsNoTracking().FirstOrDefaultAsync(l =>
+                l.LocationTypeId == location.LocationTypeId &&
+                l.UnitNumber == location.UnitNumber &&
+                l.StreetAddress1 == location.StreetAddress1 &&
+                l.StreetAddress2 == location.StreetAddress2 &&
+                l.City == location.City &&
+                l.PostalCode == location.PostalCode &&
+                l.ProvinceId == location.ProvinceId &&
+                l.CountryId == location.CountryId);
+        }
+
+        /// <summary>
         /// Get all locations
         /// </summary>
         public async Task<IEnumerable<Location>> GetAllAsync()

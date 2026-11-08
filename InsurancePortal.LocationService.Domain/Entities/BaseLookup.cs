@@ -6,7 +6,7 @@ namespace InsurancePortal.LocationService.Domain.Entities
     /// </summary>
     public abstract class BaseLookup
     {
-        public Guid Id { get; set; }
+        public int Id { get; set; }
 
         /// <summary>
         /// Stable, unique code identifier

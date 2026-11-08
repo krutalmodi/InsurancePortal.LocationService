@@ -11,7 +11,7 @@ namespace InsurancePortal.LocationService.Domain.Entities
         /// <summary>
         /// Foreign key to LocationTypeLookup (Residential, Commercial, etc.)
         /// </summary>
-        public Guid LocationTypeId { get; set; }
+        public int LocationTypeId { get; set; }
 
         /// <summary>
         /// Unit/Suite number (optional)
@@ -41,12 +41,12 @@ namespace InsurancePortal.LocationService.Domain.Entities
         /// <summary>
         /// Foreign key to ProvinceLookup
         /// </summary>
-        public Guid ProvinceId { get; set; }
+        public int ProvinceId { get; set; }
 
         /// <summary>
         /// Foreign key to CountryLookup
         /// </summary>
-        public Guid CountryId { get; set; }
+        public int CountryId { get; set; }
 
         /// <summary>
         /// Audit: When created
