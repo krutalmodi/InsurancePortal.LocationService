@@ -15,6 +15,7 @@
 5. [Integration with Quote Service](#integration-with-quote-service)
 6. [Project Structure](#project-structure)
 7. [Configuration](#configuration)
+8. [NuGet Packages](#nuget-packages)
 
 ---
 
@@ -22,9 +23,16 @@
 
 - **Stack**: ASP.NET Core (.NET 10), Entity Framework Core with SQL Server, JWT Bearer authentication.
 - **Pattern**: Clean Architecture layering, matching Quote Service (Domain, Application, Infrastructure, API).
-- **CQRS**: Writes and reads are separated in the Application layer. Commands (`CreateLocationCommand`, `UpdateLocationCommand`, `DeleteLocationCommand`) are handled by `ICommandHandler<TCommand, TResult>` implementations in `Application/Commands`. Queries (`GetLocationByIdQuery`, `GetAllLocationsQuery`) are handled by `IQueryHandler<TQuery, TResult>` implementations in `Application/Queries`. Handlers are hand-rolled with no mediator library. The controller injects the handlers directly, and they are registered in `Program.cs`. Shared request/entity mapping lives in `Application/Mappings/LocationMapper`.
+Shared request/entity mapping lives in `Application/Mappings/LocationMapper`. Commands carry the acting user ID: `CreateLocationCommand(LocationRequest Request, string? UserId)`, `UpdateLocationCommand(Guid Id, LocationRequest Request, string? UserId)`, `DeleteLocationCommand(Guid Id, string? UserId)`. `LocationsController` reads it from the JWT `ClaimTypes.NameIdentifier` claim via the `CurrentUserId` property.
 - **Repositories** live in `Infrastructure/Repositories`.
-- **Startup** follows the Quote Service `Program.cs` pattern.
+- **Startup** follows the Quote Service `Program.cs` pattern. `Program.cs` registers, in order: controllers, OpenAPI (`AddOpenApi`), CORS policy `AllowFrontend` (any origin, method, header), `AddEndpointsApiExplorer`, `AddSwaggerGen`, `LocationDbContext` (SQL Server, `DefaultConnection`), then scoped services:
+  - `ILocationRepository` -> `LocationRepository`
+  - `ICommandHandler<CreateLocationCommand, LocationResponse>` -> `CreateLocationCommandHandler`
+  - `ICommandHandler<UpdateLocationCommand, LocationResponse?>` -> `UpdateLocationCommandHandler`
+  - `ICommandHandler<DeleteLocationCommand, bool>` -> `DeleteLocationCommandHandler`
+  - `IQueryHandler<GetLocationByIdQuery, LocationResponse?>` -> `GetLocationByIdQueryHandler`
+  - `IQueryHandler<GetAllLocationsQuery, IEnumerable<LocationResponse>>` -> `GetAllLocationsQueryHandler`
+  Then JWT bearer authentication and `AddAuthorization()`.
 
 ### Ownership
 
@@ -35,10 +43,11 @@
 
 ## Domain Model
 
-- **Location**: address record (UnitNumber, StreetAddress1, StreetAddress2, City, PostalCode, ProvinceId, CountryId, LocationTypeId). Locations are unique by these address fields: creating a duplicate returns the existing record ID. Matching is exact (case and whitespace sensitive).
-- **LocationTypeLookup**: Residential, Commercial.
-- **CountryLookup**: United States, Canada.
-- **ProvinceLookup**: US states and Canadian provinces, each linked to a country.
+address record (UnitNumber, StreetAddress1, StreetAddress2, City, PostalCode, ProvinceId, CountryId, LocationTypeId). `Id` is a `Guid`. Audit fields: `CreatedAt`, `CreatedBy`, `UpdatedAt`, `UpdatedBy` (`CreatedAt`/`UpdatedAt` default to `DateTime.UtcNow`; `CreatedBy`/`UpdatedBy` are nullable strings holding the caller's user ID). `GetFullAddress()` joins UnitNumber, StreetAddress1, and StreetAddress2 with `, `.
+- **BaseLookup** (abstract): `Id` (int), `Code`, `Name`, `Description` (optional, max 1000), `IsActive` (default true), `SortOrder` (int), and the audit fields `CreatedAt`, `CreatedBy`, `UpdatedAt`, `UpdatedBy`.
+The `LocationTypeEnum` enum (Residential, Commercial) lives in `Domain/Enums`.
+- **CountryLookup** (extends BaseLookup): adds `IsoCode` (ISO 3166-1 alpha-2, unique). Seeded: United States (Id 1, `US`) and Canada (Id 2, `CA`), with `SortOrder` 1 and 2.
+- **ProvinceLookup** (extends BaseLookup): adds `CountryId` and `ProvinceCode` (unique per country). Seeded: California, Texas, New York, Florida (US, Ids 1-4); Ontario, Quebec, British Columbia, Alberta, Manitoba (Canada, Ids 5-9). `Code` and `ProvinceCode` both hold the province code, `SortOrder` equals Id.
 
 ---
 
@@ -48,6 +57,11 @@
 - Lookup tables use integer IDs (`BaseLookup.Id` is `int`), so lookup seed rows must use integer IDs.
 - Lookup seed rows must supply all required properties (`Code`, `Name`, `CreatedAt`, `UpdatedAt`).
 - Any change to seed data or the model requires a new migration. Otherwise `Database.Migrate()` fails with `PendingModelChangesWarning`.
+- Tables: `Locations`, `LocationTypeLookups` (Code unique, seeded Residential Id 1 and Commercial Id 2), `CountryLookups` (Code and IsoCode unique), `ProvinceLookups` (Code unique, unique index on CountryId + ProvinceCode).
+- Lookup seed dates are `2025-01-01 00:00:00 UTC`.
+- `Locations` has indexes `IX_Locations_ProvinceCity_PostalCode` (ProvinceId, City, PostalCode) and `IX_Locations_CountryId`. Foreign keys to LocationTypeLookups, ProvinceLookups, and CountryLookups use `DeleteBehavior.Restrict`.
+- Column sizes: `Locations.UnitNumber` 50, `StreetAddress1` 256 (required), `StreetAddress2` 256, `City` 100 (required), `PostalCode` 20 (required), `CreatedBy`/`UpdatedBy` nvarchar(256). Lookup `CreatedBy`/`UpdatedBy` are unconstrained (nvarchar(max)), as in the InitialCreate migration.
+- `CreatedAt`/`UpdatedAt` use `datetime2` with `GETUTCDATE()` defaults on `Locations`.
 
 ### Resetting the Database and Migrations (Development)
 
@@ -68,13 +82,19 @@ dotnet ef database update --project InsurancePortal.LocationService.Infrastructu
 
 All endpoints are under `api/locations` and require a bearer token (`[Authorize]`).
 
-- `POST api/locations`: creates a location (returns 201 Created). If a location with the same address fields (type, unit number, street addresses, city, postal code, province, country) already exists, no new record is created and the existing location is returned. Handled by `CreateLocationCommandHandler`.
+Sets `CreatedBy` and `UpdatedBy` to the caller's user ID and `CreatedAt`/`UpdatedAt` to now. The duplicate-return path does not modify the existing record. Handled by `CreateLocationCommandHandler`.
 - `GET api/locations/{id}`: returns a location by ID, or 404. Handled by `GetLocationByIdQueryHandler`.
 - `GET api/locations`: returns all locations. Handled by `GetAllLocationsQueryHandler`.
-- `PUT api/locations/{id}`: updates a location, or 404. Handled by `UpdateLocationCommandHandler`.
-- `DELETE api/locations/{id}`: deletes a location (204), or 404. Handled by `DeleteLocationCommandHandler`.
+updates a location, or 404. Sets `UpdatedAt` to now and `UpdatedBy` to the caller's user ID. `CreatedBy` is not changed. Handled by `UpdateLocationCommandHandler`.
+deletes a location (204), or 404. This is a hard delete (`ILocationRepository.DeleteAsync`). The handler sets `UpdatedAt`/`UpdatedBy` on the entity before removal, but since the row is deleted those values are not persisted. Handled by `DeleteLocationCommandHandler`.
 
 Note: Quote Service only uses POST and GET by ID.
+
+### Authentication and User Identity
+
+- `LocationsController` is decorated with `[Authorize]`. Bearer tokens are validated by `JwtBearerDefaults.AuthenticationScheme` with issuer, audience, lifetime, and signing key validation (`Jwt:Issuer`, `Jwt:Audience`, `Jwt:Secret`).
+- The acting user ID is `User.FindFirstValue(ClaimTypes.NameIdentifier)`, exposed as `CurrentUserId` (`string?`). The token's `sub` claim maps to `NameIdentifier` by default, and is expected to hold the user GUID.
+- `CurrentUserId` is passed to the Create, Update, and Delete commands and stored in `CreatedBy`/`UpdatedBy`.
 
 ---
 
@@ -109,22 +129,43 @@ InsurancePortal.LocationService/
     └── Controllers/       (LocationsController)
 ```
 
-Template leftovers still present and to be removed: `API/Controllers/WeatherForecastController.cs`, `API/WeatherForecast.cs`, and `Infrastructure/Class1.cs`.
+Template files `WeatherForecastController.cs`, `WeatherForecast.cs`, and `Infrastructure/Class1.cs` have been removed. Still to clean up: `API/InsurancePortal.LocationService.API.http` contains a template request to `/weatherforecast/`.
+
+API project files: `Program.cs` (startup and DI), `Controllers/LocationsController.cs`, `Properties/launchSettings.json`, `appsettings.json`, `appsettings.Development.json`, `InsurancePortal.LocationService.API.http`.
+
+The Application project file declares a `Services` folder (`Folder Include`); no service classes are implemented.
 
 ---
 
 ## Configuration
 
-- `ConnectionStrings:DefaultConnection`: SQL Server connection. The database is created and migrated automatically at startup via `Database.Migrate()`.
-- Swagger UI (`/swagger`) is enabled in the Development environment and uses the Swashbuckle packages.
+- `ConnectionStrings:DefaultConnection`: SQL Server connection. Development value: `Server=(localdb)\\mssqllocaldb;Database=LocationService;Integrated Security=true;TrustServerCertificate=true;`. The database is created and migrated automatically at startup via `Database.Migrate()`.
+- Logging: Default `Information`, `Microsoft.AspNetCore` `Warning`. `AllowedHosts`: `*`.
+- In the Development environment: `UseSwagger()`, `UseSwaggerUI()` (`/swagger`), and `MapOpenApi()` (`/openapi/v1.json`) are enabled. Swashbuckle packages supply Swagger generation and UI; `Microsoft.AspNetCore.OpenApi` supplies the built-in OpenAPI document.
 - Middleware pipeline mirrors Quote Service: Swagger (Development only), CORS (`AllowFrontend` policy), HTTPS redirection, authentication, authorization, controllers.
-- `Jwt:Issuer`, `Jwt:Audience`, and `Jwt:Secret` (HMAC signing key). Issuer, audience, and lifetime are validated. The secret is currently a development placeholder.
-- Development URL: `http://localhost:5159` (matches the launch profile).
+- `Jwt:Issuer` and `Jwt:Audience`: both `InsurancePortal.IdentityService.Api`. `Jwt:Secret`: HMAC signing key (`SymmetricSecurityKey`, UTF-8 bytes). Issuer, audience, lifetime, and issuer signing key are validated. The secret is currently a development placeholder.
+- Launch profiles: `http` (`http://localhost:5159`, `ASPNETCORE_ENVIRONMENT=Development`, `dotnetRunMessages`) and `IIS Express` (`http://localhost:50063/`, SSL port 44370, anonymous authentication enabled, Windows authentication disabled).
+- Quote Service reads the URL from `LocationService:BaseUrl`.
+- Target framework: `net10.0` with `Nullable` and `ImplicitUsings` enabled in all projects.
 - Quote Service reads this URL from `LocationService:BaseUrl`.
+
+---
+
+## NuGet Packages
+
+All projects target `net10.0`.
+
+- **API**: `Microsoft.AspNetCore.Authentication.JwtBearer` 10.0.13, `Microsoft.AspNetCore.OpenApi` 10.0.12, `Microsoft.EntityFrameworkCore.Design` 10.0.13 (private assets), `Microsoft.EntityFrameworkCore.SqlServer` 10.0.13, `Swashbuckle.AspNetCore.Swagger` 10.3.0, `Swashbuckle.AspNetCore.SwaggerGen` 10.3.0, `Swashbuckle.AspNetCore.SwaggerUI` 10.3.0.
+- **Infrastructure**: `Microsoft.EntityFrameworkCore` 10.0.13, `Microsoft.EntityFrameworkCore.Design` 10.0.13 (private assets), `Microsoft.EntityFrameworkCore.SqlServer` 10.0.13, `System.Security.Cryptography.Pkcs` 10.0.13.
+- **Domain** and **Application**: no package references.
+
+Project references: API -> Application, Infrastructure. Infrastructure -> Domain, Application. Application -> Domain.
 
 ---
 
 ## Open Items
 
 - Replace the placeholder JWT signing key with a managed secret.
+- Hard delete discards the audit stamp. Consider a soft delete (`IsDeleted`, `DeletedBy`, `DeletedAt`) if deletions must be auditable.
+- Update `API/InsurancePortal.LocationService.API.http` to target a real endpoint and remove the `/weatherforecast/` request.
 - Confirm the JWT settings match Identity Service.

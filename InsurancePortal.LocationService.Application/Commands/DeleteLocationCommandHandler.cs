@@ -18,6 +18,9 @@ namespace InsurancePortal.LocationService.Application.Commands
             if (location is null)
                 return false;
 
+            location.UpdatedAt = DateTime.UtcNow;
+            location.UpdatedBy = command.UserId;
+
             await _repository.DeleteAsync(command.Id);
             return true;
         }

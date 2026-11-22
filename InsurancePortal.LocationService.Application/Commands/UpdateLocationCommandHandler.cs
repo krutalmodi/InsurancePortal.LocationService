@@ -24,6 +24,7 @@ namespace InsurancePortal.LocationService.Application.Commands
 
             LocationMapper.MapRequestToEntity(command.Request, location);
             location.UpdatedAt = DateTime.UtcNow;
+            location.UpdatedBy = command.UserId;
 
             await _repository.UpdateAsync(location);
             return LocationMapper.MapToResponse(location);

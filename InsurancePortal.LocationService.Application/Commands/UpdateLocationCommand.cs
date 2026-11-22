@@ -2,5 +2,5 @@ using InsurancePortal.LocationService.Application.DTOs.Requests;
 
 namespace InsurancePortal.LocationService.Application.Commands
 {
-    public record UpdateLocationCommand(Guid Id, LocationRequest Request);
+    public record UpdateLocationCommand(Guid Id, LocationRequest Request, string? UserId);
 }

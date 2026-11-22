@@ -1,4 +1,4 @@
 namespace InsurancePortal.LocationService.Application.Commands
 {
-    public record DeleteLocationCommand(Guid Id);
+    public record DeleteLocationCommand(Guid Id, string? UserId);
 }

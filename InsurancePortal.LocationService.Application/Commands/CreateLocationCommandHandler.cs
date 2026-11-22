@@ -28,6 +28,8 @@ namespace InsurancePortal.LocationService.Application.Commands
 
             location.CreatedAt = DateTime.UtcNow;
             location.UpdatedAt = location.CreatedAt;
+            location.CreatedBy = command.UserId;
+            location.UpdatedBy = command.UserId;
 
             await _repository.AddAsync(location);
             return LocationMapper.MapToResponse(location);

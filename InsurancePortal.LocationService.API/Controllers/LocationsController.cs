@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using InsurancePortal.LocationService.Application.Abstractions;
@@ -33,10 +34,12 @@ namespace InsurancePortal.LocationService.API.Controllers
             _getAllLocations = getAllLocations;
         }
 
+        private string? CurrentUserId => User.FindFirstValue(ClaimTypes.NameIdentifier);
+
         [HttpPost]
         public async Task<ActionResult<LocationResponse>> Create([FromBody] LocationRequest request)
         {
-            var created = await _createLocation.HandleAsync(new CreateLocationCommand(request));
+            var created = await _createLocation.HandleAsync(new CreateLocationCommand(request, CurrentUserId));
             return CreatedAtAction(nameof(GetById), new { id = created.Id }, created);
         }
 
@@ -56,14 +59,14 @@ namespace InsurancePortal.LocationService.API.Controllers
         [HttpPut("{id:guid}")]
         public async Task<ActionResult<LocationResponse>> Update(Guid id, [FromBody] LocationRequest request)
         {
-            var updated = await _updateLocation.HandleAsync(new UpdateLocationCommand(id, request));
+            var updated = await _updateLocation.HandleAsync(new UpdateLocationCommand(id, request, CurrentUserId));
             return updated is null ? NotFound() : Ok(updated);
         }
 
         [HttpDelete("{id:guid}")]
         public async Task<IActionResult> Delete(Guid id)
         {
-            return await _deleteLocation.HandleAsync(new DeleteLocationCommand(id)) ? NoContent() : NotFound();
+            return await _deleteLocation.HandleAsync(new DeleteLocationCommand(id, CurrentUserId)) ? NoContent() : NotFound();
         }
     }
 }
