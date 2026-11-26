@@ -32,6 +32,7 @@ Shared request/entity mapping lives in `Application/Mappings/LocationMapper`. Co
   - `ICommandHandler<DeleteLocationCommand, bool>` -> `DeleteLocationCommandHandler`
   - `IQueryHandler<GetLocationByIdQuery, LocationResponse?>` -> `GetLocationByIdQueryHandler`
   - `IQueryHandler<GetAllLocationsQuery, IEnumerable<LocationResponse>>` -> `GetAllLocationsQueryHandler`
+  - `ILookupRepository` -> `LookupRepository`, plus the countries, provinces-by-country, and location-types query handlers.
   Then JWT bearer authentication and `AddAuthorization()`.
 
 ### Ownership
@@ -80,13 +81,25 @@ dotnet ef database update --project InsurancePortal.LocationService.Infrastructu
 
 ## API Endpoints
 
-All endpoints are under `api/locations` and require a bearer token (`[Authorize]`).
+### UI lookups (guest and registered users)
 
-Sets `CreatedBy` and `UpdatedBy` to the caller's user ID and `CreatedAt`/`UpdatedAt` to now. The duplicate-return path does not modify the existing record. Handled by `CreateLocationCommandHandler`.
+These read-only endpoints allow anonymous requests; registered users can call the same routes with a bearer token. Responses are JSON arrays of active values, ordered by `sortOrder`, then name and ID. Inactive values are retained for historical records but excluded from the UI lists; provinces of inactive countries are also excluded. No audit fields are returned.
+
+- `GET api/lookups/countries`: countries with `id`, `code`, `name`, `description` (nullable), and `isoCode`.
+- `GET api/lookups/countries/{countryId}/provinces`: provinces/states with `id`, `code`, `name`, `description` (nullable), `countryId`, and `provinceCode`. A positive unknown or inactive country ID returns `200` with `[]`; a non-positive integer returns `400`. A non-integer route value does not match the endpoint.
+- `GET api/lookups/location-types`: location types with `id`, `code`, `name`, and `description` (nullable).
+
+Use the returned integer IDs as `countryId`, `provinceId`, and `locationTypeId` when submitting an address. Select a country before requesting its provinces. Example HTTP requests are in `InsurancePortal.LocationService.API.http`.
+
+### Locations (authenticated)
+
+All endpoints under `api/locations` require a bearer token (`[Authorize]`).
+
+- `POST api/locations`: creates a location or returns a matching existing location. Sets `CreatedBy` and `UpdatedBy` to the caller's user ID and `CreatedAt`/`UpdatedAt` to now. The duplicate-return path does not modify the existing record. Handled by `CreateLocationCommandHandler`.
 - `GET api/locations/{id}`: returns a location by ID, or 404. Handled by `GetLocationByIdQueryHandler`.
 - `GET api/locations`: returns all locations. Handled by `GetAllLocationsQueryHandler`.
-updates a location, or 404. Sets `UpdatedAt` to now and `UpdatedBy` to the caller's user ID. `CreatedBy` is not changed. Handled by `UpdateLocationCommandHandler`.
-deletes a location (204), or 404. This is a hard delete (`ILocationRepository.DeleteAsync`). The handler sets `UpdatedAt`/`UpdatedBy` on the entity before removal, but since the row is deleted those values are not persisted. Handled by `DeleteLocationCommandHandler`.
+- `PUT api/locations/{id}`: updates a location, or 404. Sets `UpdatedAt` to now and `UpdatedBy` to the caller's user ID. `CreatedBy` is not changed. Handled by `UpdateLocationCommandHandler`.
+- `DELETE api/locations/{id}`: deletes a location (204), or 404. This is a hard delete (`ILocationRepository.DeleteAsync`). The handler sets `UpdatedAt`/`UpdatedBy` on the entity before removal, but since the row is deleted those values are not persisted. Handled by `DeleteLocationCommandHandler`.
 
 Note: Quote Service only uses POST and GET by ID.
 
@@ -117,21 +130,21 @@ InsurancePortal.LocationService/
 ├── InsurancePortal.LocationService.Application/
 │   ├── Abstractions/      (ICommandHandler, IQueryHandler)
 │   ├── Commands/          (CreateLocationCommand, UpdateLocationCommand, DeleteLocationCommand, and their handlers)
-│   ├── DTOs/              (LocationRequest, LocationResponse)
+│   ├── DTOs/              (LocationRequest, LocationResponse, lookup responses)
 │   ├── Mappings/          (LocationMapper)
-│   ├── Queries/           (GetLocationByIdQuery, GetAllLocationsQuery, and their handlers)
-│   └── Repositories/      (ILocationRepository)
+│   ├── Queries/           (location and lookup queries and their handlers)
+│   └── Repositories/      (ILocationRepository, ILookupRepository)
 ├── InsurancePortal.LocationService.Infrastructure/
 │   ├── Data/              (LocationDbContext, Configurations/)
 │   ├── Migrations/        (InitialCreate)
-│   └── Repositories/      (LocationRepository: CRUD and GetByLocationAsync)
+│   └── Repositories/      (LocationRepository, LookupRepository)
 └── InsurancePortal.LocationService.API/
-    └── Controllers/       (LocationsController)
+    └── Controllers/       (LocationsController, LookupsController)
 ```
 
-Template files `WeatherForecastController.cs`, `WeatherForecast.cs`, and `Infrastructure/Class1.cs` have been removed. Still to clean up: `API/InsurancePortal.LocationService.API.http` contains a template request to `/weatherforecast/`.
+Template files `WeatherForecastController.cs`, `WeatherForecast.cs`, and `Infrastructure/Class1.cs` have been removed.
 
-API project files: `Program.cs` (startup and DI), `Controllers/LocationsController.cs`, `Properties/launchSettings.json`, `appsettings.json`, `appsettings.Development.json`, `InsurancePortal.LocationService.API.http`.
+API project files: `Program.cs` (startup and DI), `Controllers/LocationsController.cs`, `Controllers/LookupsController.cs`, `Properties/launchSettings.json`, `appsettings.json`, `appsettings.Development.json`, `InsurancePortal.LocationService.API.http`.
 
 The Application project file declares a `Services` folder (`Folder Include`); no service classes are implemented.
 
@@ -167,5 +180,4 @@ Project references: API -> Application, Infrastructure. Infrastructure -> Domain
 
 - Replace the placeholder JWT signing key with a managed secret.
 - Hard delete discards the audit stamp. Consider a soft delete (`IsDeleted`, `DeletedBy`, `DeletedAt`) if deletions must be auditable.
-- Update `API/InsurancePortal.LocationService.API.http` to target a real endpoint and remove the `/weatherforecast/` request.
 - Confirm the JWT settings match Identity Service.

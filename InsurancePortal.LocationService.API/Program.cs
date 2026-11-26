@@ -26,11 +26,15 @@ builder.Services.AddDbContext<LocationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ILocationRepository, LocationRepository>();
+builder.Services.AddScoped<ILookupRepository, LookupRepository>();
 builder.Services.AddScoped<ICommandHandler<CreateLocationCommand, LocationResponse>, CreateLocationCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<UpdateLocationCommand, LocationResponse?>, UpdateLocationCommandHandler>();
 builder.Services.AddScoped<ICommandHandler<DeleteLocationCommand, bool>, DeleteLocationCommandHandler>();
 builder.Services.AddScoped<IQueryHandler<GetLocationByIdQuery, LocationResponse?>, GetLocationByIdQueryHandler>();
 builder.Services.AddScoped<IQueryHandler<GetAllLocationsQuery, IEnumerable<LocationResponse>>, GetAllLocationsQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetCountriesQuery, IEnumerable<CountryLookupResponse>>, GetCountriesQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetProvincesByCountryIdQuery, IEnumerable<ProvinceLookupResponse>>, GetProvincesByCountryIdQueryHandler>();
+builder.Services.AddScoped<IQueryHandler<GetLocationTypesQuery, IEnumerable<LocationTypeLookupResponse>>, GetLocationTypesQueryHandler>();
 
 var jwt = builder.Configuration.GetSection("Jwt");
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
